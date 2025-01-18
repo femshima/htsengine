@@ -268,6 +268,25 @@ impl Engine {
 
         Ok(Self::new(voiceset, condition))
     }
+
+    /// Load htsvoice file content and create a new [`Engine`].
+    #[cfg(feature = "htsvoice")]
+    pub fn load_from_bytes(voices: &[&[u8]]) -> Result<Self, EngineError> {
+        use crate::model::load_htsvoice_from_bytes;
+
+        let voices = voices
+            .iter()
+            .map(|bytes| Ok(Arc::new(load_htsvoice_from_bytes(bytes)?)))
+            .collect::<Result<Vec<_>, ModelError>>()?;
+
+        let voiceset = VoiceSet::new(voices)?;
+
+        let mut condition = Condition::default();
+        condition.load_model(&voiceset)?;
+
+        Ok(Self::new(voiceset, condition))
+    }
+
     /// Create a new [`Engine`] with provided voices and condition.
     pub fn new(voices: VoiceSet, condition: Condition) -> Self {
         Engine { voices, condition }
